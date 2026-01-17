@@ -7,32 +7,42 @@ import java.net.URISyntaxException;
 @Configuration
 public class DatabaseConfig {
 
-    // this runs before the datasource is initialized
+    // we use a static block to set properties before spring starts the datasource
     static {
         String databaseUrl = System.getenv("DATABASE_URL");
-        if (databaseUrl != null && databaseUrl.startsWith("postgres")) {
+        if (databaseUrl != null && (databaseUrl.startsWith("postgres") || databaseUrl.startsWith("jdbc:postgresql"))) {
             try {
-                // render gives us postgres://user:pass@host:port/db
-                // java needs jdbc:postgresql://host:port/db
-                URI uri = new URI(databaseUrl);
-                String username = uri.getUserInfo().split(":")[0];
-                String password = uri.getUserInfo().split(":")[1];
-                String dbUrl = "jdbc:postgresql://" + uri.getHost() + ":" + uri.getPort() + uri.getPath();
+                // if it's already jdbc format, we just use it
+                if (databaseUrl.startsWith("jdbc:postgresql")) {
+                    System.setProperty("JDBC_DATABASE_URL", databaseUrl);
+                    System.out.println("database config: using provided jdbc database url");
+                } else {
+                    // convert render's postgres:// format to jdbc:postgresql://
+                    URI uri = new URI(databaseUrl);
+                    String userInfo = uri.getUserInfo();
 
-                // we set these so spring boot can find them in application.properties
-                System.setProperty("JDBC_DATABASE_URL", dbUrl);
-                System.setProperty("DB_USER", username);
-                System.setProperty("DB_PASSWORD", password);
-                System.setProperty("DB_DRIVER", "org.postgresql.Driver");
-                System.setProperty("DB_DIALECT", "org.hibernate.dialect.PostgreSQLDialect");
+                    if (userInfo != null && userInfo.contains(":")) {
+                        String username = userInfo.split(":")[0];
+                        String password = userInfo.split(":")[1];
+                        String host = uri.getHost();
+                        int port = uri.getPort();
+                        String path = uri.getPath();
 
-                // log a little something to help debugging
-                System.out.println("database config: found postgres url, switching to prod mode");
+                        // build the jdbc string
+                        String dbUrl = "jdbc:postgresql://" + host + ":" + (port == -1 ? "5432" : port) + path;
+
+                        System.setProperty("JDBC_DATABASE_URL", dbUrl);
+                        System.setProperty("DB_USER", username);
+                        System.setProperty("DB_PASSWORD", password);
+
+                        System.out.println("database config: converted render url to jdbc format");
+                    }
+                }
             } catch (URISyntaxException | ArrayIndexOutOfBoundsException e) {
-                System.err.println("database config error: couldn't parse DATABASE_URL");
+                System.err.println("database config error: failed to parse DATABASE_URL");
             }
         } else {
-            System.out.println("database config: no remote url found, staying in local h2 mode");
+            System.out.println("database config: no database_url found, defaulting to h2");
         }
     }
 }
