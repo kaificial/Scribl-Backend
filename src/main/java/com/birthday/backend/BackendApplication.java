@@ -9,10 +9,13 @@ import java.net.URISyntaxException;
 public class BackendApplication {
 
 	public static void main(String[] args) {
-		// we parse the render database url before anything else starts
+		// first, check if there is already a jdbc url set in the env
+		String jdbcUrlEnv = System.getenv("JDBC_DATABASE_URL");
 		String databaseUrl = System.getenv("DATABASE_URL");
 
-		if (databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("postgres")) {
+		// if we dont have a jdbc url but we do have render's native url, let's fix it
+		if ((jdbcUrlEnv == null || jdbcUrlEnv.isEmpty()) &&
+				(databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("postgres"))) {
 			try {
 				// java needs the jdbc prefix and a slightly different format
 				URI uri = new URI(databaseUrl);
@@ -32,11 +35,13 @@ public class BackendApplication {
 					System.setProperty("DB_USER", username);
 					System.setProperty("DB_PASSWORD", password);
 
-					System.out.println("backend: converted render url to jdbc format successfully");
+					System.out.println("backend: converted database_url to jdbc format successfully");
 				}
 			} catch (URISyntaxException | ArrayIndexOutOfBoundsException e) {
 				System.err.println("backend error: failed to parse the database url");
 			}
+		} else if (jdbcUrlEnv != null) {
+			System.out.println("backend: using provided jdbc_database_url");
 		} else {
 			System.out.println("backend: no remote database url found, falling back to local settings");
 		}

@@ -47,3 +47,4 @@ target/
 .mvn/
 .env
 backend_log.txt
+backend_log.txt
