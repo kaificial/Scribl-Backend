@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class CreateCardRequest {
 
-    @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", message = "ID must be a valid UUID format")
+    @Pattern(regexp = "^[a-zA-Z0-9-_]+$", message = "ID must contain only letters, numbers, dashes, or underscores")
     private String id;
 
     @NotBlank(message = "Creator name is required")
