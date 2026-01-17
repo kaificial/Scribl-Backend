@@ -5,6 +5,8 @@ import com.birthday.backend.model.Card;
 import com.birthday.backend.model.Drawing;
 import com.birthday.backend.model.Message;
 import com.birthday.backend.repository.CardRepository;
+import com.birthday.backend.repository.DrawingRepository;
+import com.birthday.backend.repository.MessageRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,12 @@ public class CardController {
 
     @Autowired
     private CardRepository cardRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
+    private DrawingRepository drawingRepository;
 
     @PostMapping
     public ResponseEntity<?> createCard(@Valid @RequestBody CreateCardRequest request) {
@@ -60,24 +68,26 @@ public class CardController {
     public ResponseEntity<?> addMessage(@PathVariable String id, @RequestBody Message message,
             @RequestParam(required = false) String recipientName) {
         try {
-            Card card = cardRepository.findById(id).orElseGet(() -> {
+            final Card card = cardRepository.findById(id).orElseGet(() -> {
                 Card newCard = new Card();
                 newCard.setId(id);
                 newCard.setCreatorName("Anonymous");
                 if (recipientName != null)
                     newCard.setRecipientName(recipientName);
-                return newCard;
+                return cardRepository.save(newCard); // save immediately to establish owner
             });
 
-            // pick a random spot if we dont have one
+            // random spot if needed
             if (message.getX() == 0 && message.getY() == 0) {
                 message.setX(Math.random() * 80 + 10);
                 message.setY(Math.random() * 80 + 10);
                 message.setRotation((Math.random() * 20) - 10);
             }
 
-            card.getMessages().add(message);
-            return ResponseEntity.ok(cardRepository.save(card));
+            message.setCard(card); // link it
+            messageRepository.save(message); // direct save is faster!
+
+            return ResponseEntity.ok(cardRepository.findById(id).get());
         } catch (Exception e) {
             System.err.println("Error adding message to card: " + id);
             e.printStackTrace();
@@ -89,24 +99,26 @@ public class CardController {
     public ResponseEntity<?> addDrawing(@PathVariable String id, @RequestBody Drawing drawing,
             @RequestParam(required = false) String recipientName) {
         try {
-            Card card = cardRepository.findById(id).orElseGet(() -> {
+            final Card card = cardRepository.findById(id).orElseGet(() -> {
                 Card newCard = new Card();
                 newCard.setId(id);
                 newCard.setCreatorName("Anonymous");
                 if (recipientName != null)
                     newCard.setRecipientName(recipientName);
-                return newCard;
+                return cardRepository.save(newCard);
             });
 
-            // randomize where it goes
+            // random spot
             if (drawing.getX() == 0 && drawing.getY() == 0) {
                 drawing.setX(Math.random() * 60 + 20);
                 drawing.setY(Math.random() * 60 + 20);
                 drawing.setRotation((Math.random() * 30) - 15);
             }
 
-            card.getDrawings().add(drawing);
-            return ResponseEntity.ok(cardRepository.save(card));
+            drawing.setCard(card);
+            drawingRepository.save(drawing);
+
+            return ResponseEntity.ok(cardRepository.findById(id).get());
         } catch (Exception e) {
             System.err.println("Error adding drawing to card: " + id);
             e.printStackTrace();
