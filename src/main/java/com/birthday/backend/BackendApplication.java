@@ -22,12 +22,13 @@ public class BackendApplication {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
+				// pull the allowed origins from the config
 				String[] origins = allowedOrigins.split(",");
 				registry.addMapping("/**")
 						.allowedOrigins(origins)
 						.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 						.allowCredentials(true)
-						.maxAge(3600);
+						.maxAge(3600); // cache cors for an hour
 			}
 		};
 	}
