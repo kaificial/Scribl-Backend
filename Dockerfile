@@ -13,6 +13,9 @@ WORKDIR /app
 # copy the jar we just made
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
+# force production profile by default so it doesn't use h2
+ENV SPRING_PROFILES_ACTIVE=prod
+
 # keep an eye on the app health
 HEALTHCHECK --interval=30s --timeout=3s \
     CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
