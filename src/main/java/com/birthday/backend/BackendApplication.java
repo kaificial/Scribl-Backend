@@ -28,6 +28,31 @@ public class BackendApplication {
 				finalUser = dbUser;
 			if (dbPass != null)
 				finalPass = dbPass;
+
+			// fix if it contains the @ symbol (user:pass@host)
+			if (finalUrl.contains("@") && isPostgres) {
+				try {
+					// strip jdbc: prefix to parse it as a uri
+					String uriPart = finalUrl.replace("jdbc:", "");
+					URI uri = new URI(uriPart);
+					String userInfo = uri.getUserInfo();
+					if (userInfo != null && userInfo.contains(":")) {
+						finalUser = userInfo.split(":")[0];
+						finalPass = userInfo.split(":")[1];
+						String host = uri.getHost();
+						int port = uri.getPort();
+						String path = uri.getPath();
+						String query = uri.getQuery();
+
+						finalUrl = "jdbc:postgresql://" + host + ":" + (port == -1 ? "5432" : port) + path;
+						if (query != null)
+							finalUrl += "?" + query;
+						System.out.println("backend: fixed malformed jdbc url containing @ symbol");
+					}
+				} catch (Exception e) {
+					System.err.println("backend error: failed to fix malformed jdbc url");
+				}
+			}
 			System.out.println("backend: using provided jdbc_database_url");
 		}
 		// 2. check for render's native postgres url
