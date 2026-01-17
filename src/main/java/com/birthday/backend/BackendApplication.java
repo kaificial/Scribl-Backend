@@ -14,23 +14,4 @@ public class BackendApplication {
 		SpringApplication.run(BackendApplication.class, args);
 	}
 
-	@Value("${cors.allowed-origins}")
-	private String allowedOrigins;
-
-	@Bean
-	public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				// pull the allowed origins from the config
-				String[] origins = allowedOrigins.split(",");
-				registry.addMapping("/**")
-						.allowedOrigins(origins)
-						.allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-						.allowCredentials(true)
-						.maxAge(3600); // cache cors for an hour
-			}
-		};
-	}
-
 }

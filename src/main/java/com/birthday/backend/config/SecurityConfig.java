@@ -15,6 +15,8 @@ public class SecurityConfig {
                 http
                                 // disable csrf for the rest api
                                 .csrf(csrf -> csrf.disable())
+                                // enable cors with our config
+                                .cors(Customizer.withDefaults())
 
                                 // config who can access what - letting everything through for now
                                 .authorizeHttpRequests(auth -> auth
