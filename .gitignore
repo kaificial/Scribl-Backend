@@ -31,7 +31,6 @@ Thumbs.db
 *.swo
 
 # Sensitive files
-docker-compose.yml
 backend_log.txt
 backend/backend_log.txt
 
