@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Ping Backend
         run: |
-          # Replace with your actual Render URL
-          # Use the health check or home endpoint
-          curl -s "${{ secrets.RENDER_BACKEND_URL }}/api/health" || curl -s "${{ secrets.RENDER_BACKEND_URL }}"
+          # ping the render backend to keep it alive
+          echo "Pinging backend at https://scribl-backend.onrender.com"
+          curl -f -s -o /dev/null -w "Status: %{http_code}\n" "https://scribl-backend.onrender.com/api/health" || \
+          curl -f -s -o /dev/null -w "Status: %{http_code}\n" "https://scribl-backend.onrender.com" || \
+          echo "Backend ping completed (may be warming up)"
