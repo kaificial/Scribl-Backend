@@ -28,6 +28,11 @@ public class CardController {
     @Autowired
     private DrawingRepository drawingRepository;
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
     @PostMapping
     public ResponseEntity<?> createCard(@Valid @RequestBody CreateCardRequest request) {
         Card card = new Card();
