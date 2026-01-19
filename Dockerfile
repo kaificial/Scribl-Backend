@@ -13,5 +13,5 @@ COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
 # keeping the app port open
 EXPOSE 8080
-# start it up
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# start it up with optimizations for small memory footprint (ideal for free tiers like Render)
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:ActiveProcessorCount=2", "-Xss512k", "-jar", "app.jar"]

@@ -130,74 +130,57 @@ public class CardController {
     @PatchMapping("/{id}/messages/{messageId}")
     public ResponseEntity<Card> updateMessage(@PathVariable String id, @PathVariable Long messageId,
             @RequestBody Message updates) {
-        Card card = cardRepository.findById(id).orElseGet(() -> {
-            Card newCard = new Card();
-            newCard.setId(id);
-            newCard.setCreatorName("Anonymous");
-            return cardRepository.save(newCard);
+
+        messageRepository.findById(messageId).ifPresent(m -> {
+            if (updates.getX() != 0)
+                m.setX(updates.getX());
+            if (updates.getY() != 0)
+                m.setY(updates.getY());
+            if (updates.getWidth() != null)
+                m.setWidth(updates.getWidth());
+            if (updates.getHeight() != null)
+                m.setHeight(updates.getHeight());
+            m.setRotation(updates.getRotation());
+            messageRepository.save(m);
         });
 
-        card.getMessages().stream()
-                .filter(m -> m.getId().equals(messageId))
-                .findFirst()
-                .ifPresent(m -> {
-                    if (updates.getX() != 0)
-                        m.setX(updates.getX());
-                    if (updates.getY() != 0)
-                        m.setY(updates.getY());
-                    if (updates.getWidth() != null)
-                        m.setWidth(updates.getWidth());
-                    if (updates.getHeight() != null)
-                        m.setHeight(updates.getHeight());
-                    m.setRotation(updates.getRotation());
-                });
-        return ResponseEntity.ok(cardRepository.save(card));
+        // Still return the full card for UI sync, but individual save is faster
+        return ResponseEntity.ok(cardRepository.findById(id).orElse(null));
     }
 
     // update the drawing position and size
     @PatchMapping("/{id}/drawings/{drawingId}")
     public ResponseEntity<Card> updateDrawing(@PathVariable String id, @PathVariable Long drawingId,
             @RequestBody Drawing updates) {
-        Card card = cardRepository.findById(id).orElseGet(() -> {
-            Card newCard = new Card();
-            newCard.setId(id);
-            newCard.setCreatorName("Anonymous");
-            return cardRepository.save(newCard);
+
+        drawingRepository.findById(drawingId).ifPresent(d -> {
+            if (updates.getX() != 0)
+                d.setX(updates.getX());
+            if (updates.getY() != 0)
+                d.setY(updates.getY());
+            if (updates.getWidth() != null)
+                d.setWidth(updates.getWidth());
+            if (updates.getHeight() != null)
+                d.setHeight(updates.getHeight());
+            d.setRotation(updates.getRotation());
+
+            if (updates.getImageData() != null)
+                d.setImageData(updates.getImageData());
+            if (updates.getContentJson() != null)
+                d.setContentJson(updates.getContentJson());
+
+            drawingRepository.save(d);
         });
 
-        card.getDrawings().stream()
-                .filter(d -> d.getId().equals(drawingId))
-                .findFirst()
-                .ifPresent(d -> {
-                    if (updates.getX() != 0)
-                        d.setX(updates.getX());
-                    if (updates.getY() != 0)
-                        d.setY(updates.getY());
-                    if (updates.getWidth() != null)
-                        d.setWidth(updates.getWidth());
-                    if (updates.getHeight() != null)
-                        d.setHeight(updates.getHeight());
-                    d.setRotation(updates.getRotation());
-
-                    if (updates.getImageData() != null)
-                        d.setImageData(updates.getImageData());
-                    if (updates.getContentJson() != null)
-                        d.setContentJson(updates.getContentJson());
-                });
-        return ResponseEntity.ok(cardRepository.save(card));
+        return ResponseEntity.ok(cardRepository.findById(id).orElse(null));
     }
 
     // delete a message
     @DeleteMapping("/{id}/messages/{messageId}")
     public ResponseEntity<Void> deleteMessage(@PathVariable String id, @PathVariable Long messageId) {
-        Optional<Card> cardOpt = cardRepository.findById(id);
-        if (cardOpt.isPresent()) {
-            Card card = cardOpt.get();
-            boolean removed = card.getMessages().removeIf(m -> m.getId().equals(messageId));
-            if (removed) {
-                cardRepository.save(card);
-                return ResponseEntity.ok().build();
-            }
+        if (messageRepository.existsById(messageId)) {
+            messageRepository.deleteById(messageId);
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
@@ -205,14 +188,9 @@ public class CardController {
     // delete a drawing
     @DeleteMapping("/{id}/drawings/{drawingId}")
     public ResponseEntity<Void> deleteDrawing(@PathVariable String id, @PathVariable Long drawingId) {
-        Optional<Card> cardOpt = cardRepository.findById(id);
-        if (cardOpt.isPresent()) {
-            Card card = cardOpt.get();
-            boolean removed = card.getDrawings().removeIf(d -> d.getId().equals(drawingId));
-            if (removed) {
-                cardRepository.save(card);
-                return ResponseEntity.ok().build();
-            }
+        if (drawingRepository.existsById(drawingId)) {
+            drawingRepository.deleteById(drawingId);
+            return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
     }
