@@ -10,6 +10,7 @@ import com.birthday.backend.repository.MessageRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -55,6 +56,7 @@ public class CardController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getCard(@PathVariable String id) {
         try {
             Optional<Card> card = cardRepository.findById(id);
@@ -70,6 +72,7 @@ public class CardController {
     }
 
     @PostMapping("/{id}/messages")
+    @Transactional
     public ResponseEntity<?> addMessage(@PathVariable String id, @RequestBody Message message,
             @RequestParam(required = false) String recipientName) {
         try {
@@ -101,6 +104,7 @@ public class CardController {
     }
 
     @PostMapping("/{id}/drawings")
+    @Transactional
     public ResponseEntity<?> addDrawing(@PathVariable String id, @RequestBody Drawing drawing,
             @RequestParam(required = false) String recipientName) {
         try {
@@ -133,6 +137,7 @@ public class CardController {
 
     // update where the message is and how big it is
     @PatchMapping("/{id}/messages/{messageId}")
+    @Transactional
     public ResponseEntity<Card> updateMessage(@PathVariable String id, @PathVariable Long messageId,
             @RequestBody Message updates) {
 
@@ -155,6 +160,7 @@ public class CardController {
 
     // update the drawing position and size
     @PatchMapping("/{id}/drawings/{drawingId}")
+    @Transactional
     public ResponseEntity<Card> updateDrawing(@PathVariable String id, @PathVariable Long drawingId,
             @RequestBody Drawing updates) {
 
@@ -201,6 +207,7 @@ public class CardController {
     }
 
     @PatchMapping("/{id}/wrapped")
+    @Transactional
     public ResponseEntity<Card> updateWrappedData(@PathVariable String id, @RequestBody String wrappedData) {
         Card card = cardRepository.findById(id).orElseGet(() -> {
             Card newCard = new Card();
