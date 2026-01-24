@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -59,11 +58,9 @@ public class CardController {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getCard(@PathVariable String id) {
         try {
-            Optional<Card> card = cardRepository.findById(id);
-            if (card.isPresent()) {
-                return ResponseEntity.ok(card.get());
-            }
-            return ResponseEntity.notFound().build();
+            return cardRepository.findById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
             System.err.println("Error fetching card: " + id);
             e.printStackTrace();
